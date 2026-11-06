@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>고충토로추진위원회 모바일 주문접수</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#222;--mute:#777;--line:#e6e2d9;--sb:#00704a;--aj:#d9467a;--accent:#00704a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;padding-bottom:84px}
+header{padding:22px 16px 10px;text-align:center}
+header h1{margin:0;font-size:20px;line-height:1.35}
+header p{margin:6px 0 0;color:var(--mute);font-size:13px}
+main{max-width:640px;margin:0 auto;padding:0 16px}
+.brands{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.brand{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 8px 18px;text-align:center;cursor:pointer;box-shadow:0 2px 8px #0000000d}
+.brand:active{transform:scale(.97)}
+.brand svg{width:84px;height:84px}
+.brand b{display:block;margin-top:10px;font-size:17px}
+.brand span{font-size:12px;color:var(--mute)}
+.btn{border:0;border-radius:12px;padding:13px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--accent);color:#fff}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.block{width:100%}
+.top{display:flex;align-items:center;gap:10px;padding:14px 0 6px}
+.top h2{margin:0;font-size:18px;flex:1}
+.back{background:none;border:0;font-size:22px;cursor:pointer;padding:4px 8px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.item .nm{font-weight:700}
+.item .row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.size{flex:1;min-width:84px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 4px;font:inherit;font-size:13px;cursor:pointer;text-align:center}
+.size small{display:block;color:var(--mute);margin-top:2px}
+.size.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,#fff);font-weight:700}
+.add{margin-top:8px;display:flex;align-items:center;gap:8px}
+.qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.qty button{border:0;background:#fff;width:34px;height:34px;font-size:18px;cursor:pointer}
+.qty span{min-width:26px;text-align:center}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:16px}
+.panel h3{margin:0 0 10px;font-size:15px}
+.line{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.line:last-child{border:0}
+.x{border:0;background:none;color:#c33;cursor:pointer;font-size:16px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;margin-bottom:10px}
+label{font-size:13px;color:var(--mute);display:block;margin-bottom:4px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fffe;backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center}
+.bar .btn{flex:1;max-width:300px}
+.order{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--sb);border-radius:12px;padding:12px;margin-top:10px;font-size:14px}
+.order.aunty{border-left-color:var(--aj)}
+.order .h{display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px}
+.tag{font-size:11px;padding:2px 7px;border-radius:99px;color:#fff;background:var(--sb);margin-right:6px}
+.tag.aunty{background:var(--aj)}
+.sum{display:flex;justify-content:space-between;font-weight:700;padding-top:6px}
+.empty{color:var(--mute);text-align:center;padding:30px 0}
+.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;z-index:9;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>고충토로추진위원회<br>모바일 주문접수</h1>
+  <p>매장을 선택해 주세요 · 주문시간 오늘 15:00 ~ 16:30</p>
+</header>
+<main id="app"></main>
+<div class="bar" id="bar"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const won = n => n.toLocaleString("ko-KR") + "원";
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let DATA = null, basket = [], draft = {}, view = "home", brand = null;
+
+const LOGO = {
+  starbucks: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#00704a"/><circle cx="50" cy="50" r="36" fill="none" stroke="#fff" stroke-width="3"/>
+    <path d="M50 22l5.5 16.5H73L59 48.5l5.3 16.7L50 55l-14.3 10.2L41 48.5 27 38.5h17.5z" fill="#fff"/></svg>`,
+  aunty: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#d9467a"/>
+    <text x="50" y="47" text-anchor="middle" font-size="19" font-weight="700" fill="#fff" font-family="Malgun Gothic,sans-serif">아운티</text>
+    <text x="50" y="70" text-anchor="middle" font-size="19" font-weight="700" fill="#fff" font-family="Malgun Gothic,sans-serif">제니</text></svg>`
+};
+
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
+async function api(path, opt){const r=await fetch(path,opt);if(!r.ok)throw new Error(await r.text());return r.json()}
+
+function setAccent(b){document.documentElement.style.setProperty("--accent", b==="aunty"?"var(--aj)":"var(--sb)")}
+
+function render(){
+  const app=document.getElementById("app"), bar=document.getElementById("bar");
+  if(view==="home"){
+    setAccent("starbucks");
+    app.innerHTML=`<div class="brands">
+      ${["starbucks","aunty"].map(k=>`<div class="brand" data-b="${k}">${LOGO[k]}<b>${DATA.menus[k].label}</b><span>음료 주문하기</span></div>`).join("")}
+    </div>`;
+    app.querySelectorAll(".brand").forEach(e=>e.onclick=()=>{brand=e.dataset.b;basket=[];draft={};view="menu";render();scrollTo(0,0)});
+    bar.innerHTML=`<button class="btn ghost" id="goCart">🧾 공통 장바구니 보기</button>`;
+    document.getElementById("goCart").onclick=()=>{view="cart";render();loadCart()};
+  }else if(view==="menu"){
+    const m=DATA.menus[brand]; setAccent(brand);
+    app.innerHTML=`<div class="top"><button class="back" id="back">‹</button><h2>${m.label} 음료메뉴</h2></div>
+      ${m.items.map(it=>{
+        const d=draft[it.id]||(draft[it.id]={size:m.sizes[0],qty:1});
+        return `<div class="item" data-id="${it.id}"><div class="nm">${esc(it.name)}</div>
+          <div class="row">${m.sizes.map(s=>`<button class="size ${d.size===s?"on":""}" data-s="${s}">${s}<small>${won(it.prices[s])}</small></button>`).join("")}</div>
+          <div class="add"><div class="qty"><button data-q="-1">−</button><span>${d.qty}</span><button data-q="1">+</button></div>
+          <button class="btn" style="flex:1" data-add>메뉴 담기</button></div></div>`}).join("")}
+      <div class="panel"><h3>담은 메뉴</h3>${basketHtml()}</div>
+      <div class="panel"><h3>주문 정보</h3>
+        <label>주문자명</label><input id="name" maxlength="20" placeholder="이름을 입력하세요" value="${esc(localStorage.getItem("orderName")||"")}">
+        <label>주문요청시간 (오늘)</label>
+        <select id="slot"><option value="">시간을 선택하세요</option>${DATA.slots.map(s=>`<option>${s}</option>`).join("")}</select>
+      </div>`;
+    document.getElementById("back").onclick=()=>{view="home";render()};
+    app.querySelectorAll(".item").forEach(card=>{
+      const id=card.dataset.id, item=m.items.find(i=>i.id===id), d=draft[id];
+      card.querySelectorAll(".size").forEach(b=>b.onclick=()=>{d.size=b.dataset.s;keep(render)});
+      card.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{d.qty=Math.max(1,Math.min(20,d.qty+ +b.dataset.q));keep(render)});
+      card.querySelector("[data-add]").onclick=()=>{
+        const ex=basket.find(x=>x.id===id&&x.size===d.size);
+        if(ex)ex.qty+=d.qty;else basket.push({id,name:item.name,size:d.size,qty:d.qty,price:item.prices[d.size]});
+        d.qty=1;keep(render);toast("담았습니다");
+      };
+    });
+    app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{basket.splice(+b.dataset.del,1);keep(render)});
+    const total=basket.reduce((s,x)=>s+x.price*x.qty,0);
+    bar.innerHTML=`<button class="btn" id="submit">주문접수${basket.length?` · ${won(total)}`:""}</button>`;
+    document.getElementById("submit").onclick=submit;
+  }else{
+    setAccent("starbucks");
+    app.innerHTML=`<div class="top"><button class="back" id="back">‹</button><h2>공통 장바구니</h2><button class="btn ghost" id="rf">새로고침</button></div><div id="cart"><div class="empty">불러오는 중…</div></div>`;
+    document.getElementById("back").onclick=()=>{view="home";render()};
+    document.getElementById("rf").onclick=loadCart;
+    bar.innerHTML=`<button class="btn" id="home">+ 주문 추가하기</button>`;
+    document.getElementById("home").onclick=()=>{view="home";render()};
+  }
+}
+function keep(fn){const y=scrollY;const n=document.getElementById("name"),s=document.getElementById("slot");
+  if(n)sessionStorage.n=n.value; if(s)sessionStorage.s=s.value; fn();
+  const n2=document.getElementById("name"),s2=document.getElementById("slot");
+  if(n2&&sessionStorage.n!==undefined)n2.value=sessionStorage.n; if(s2&&sessionStorage.s)s2.value=sessionStorage.s; scrollTo(0,y)}
+function basketHtml(){
+  if(!basket.length)return `<div class="empty" style="padding:10px 0">아직 담은 메뉴가 없습니다</div>`;
+  return basket.map((x,i)=>`<div class="line"><span>${esc(x.name)} <small>(${x.size})</small> × ${x.qty}</span><span>${won(x.price*x.qty)} <button class="x" data-del="${i}">✕</button></span></div>`).join("");
+}
+async function submit(){
+  const name=document.getElementById("name").value.trim(), slot=document.getElementById("slot").value;
+  if(!basket.length)return toast("메뉴를 먼저 담아 주세요");
+  if(!name)return toast("주문자명을 입력해 주세요");
+  if(!slot)return toast("주문요청시간을 선택해 주세요");
+  try{
+    await api("/api/orders",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({brand,name,slot,items:basket.map(({id,size,qty})=>({id,size,qty}))})});
+    localStorage.setItem("orderName",name); sessionStorage.removeItem("n");sessionStorage.removeItem("s");
+    basket=[];draft={};view="cart";render();loadCart();toast("주문이 접수되었습니다");
+  }catch(e){toast("접수 실패: 다시 시도해 주세요")}
+}
+async function loadCart(){
+  const box=document.getElementById("cart"); if(!box)return;
+  const orders=await api("/api/orders");
+  if(!orders.length){box.innerHTML=`<div class="empty">아직 접수된 주문이 없습니다</div>`;return}
+  const tally={}; let grand=0;
+  orders.forEach(o=>{grand+=o.total;o.items.forEach(i=>{const k=`${DATA.menus[o.brand].label} · ${i.name} (${i.size})`;tally[k]=(tally[k]||0)+i.qty})});
+  box.innerHTML=orders.map(o=>`<div class="order ${o.brand}"><div class="h"><span><span class="tag ${o.brand}">${DATA.menus[o.brand].label}</span>${esc(o.name)}</span><span>${o.slot}</span></div>
+      ${o.items.map(i=>`<div class="line"><span>${esc(i.name)} (${i.size}) × ${i.qty}</span><span>${won(i.price*i.qty)}</span></div>`).join("")}
+      <div class="sum"><span>합계</span><span>${won(o.total)} <button class="x" data-rm="${o.id}" title="주문 취소">✕</button></span></div></div>`).join("")
+    +`<div class="panel"><h3>메뉴별 수량 (총 ${orders.length}건)</h3>${Object.entries(tally).map(([k,v])=>`<div class="line"><span>${esc(k)}</span><b>${v}잔</b></div>`).join("")}
+      <div class="sum"><span>총 금액</span><span>${won(grand)}</span></div></div>`;
+  box.querySelectorAll("[data-rm]").forEach(b=>b.onclick=async()=>{if(confirm("이 주문을 취소할까요?")){await api("/api/orders/"+b.dataset.rm,{method:"DELETE"});loadCart()}});
+}
+setInterval(()=>{if(view==="cart")loadCart()},10000);
+api("/api/menus").then(d=>{DATA=d;render()}).catch(()=>{document.getElementById("app").innerHTML='<div class="empty">서버에 연결할 수 없습니다</div>'});
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "starbucks": {
+    "label": "스타벅스",
+    "sizes": ["Tall", "Grande", "Venti"],
+    "items": [
+      {"id": "sb1", "name": "아이스 아메리카노", "prices": {"Tall": 4500, "Grande": 5000, "Venti": 5500}},
+      {"id": "sb2", "name": "카페 라떼", "prices": {"Tall": 5000, "Grande": 5500, "Venti": 6000}},
+      {"id": "sb3", "name": "카푸치노", "prices": {"Tall": 5000, "Grande": 5500, "Venti": 6000}},
+      {"id": "sb4", "name": "카라멜 마키아토", "prices": {"Tall": 5900, "Grande": 6400, "Venti": 6900}},
+      {"id": "sb5", "name": "바닐라 크림 콜드 브루", "prices": {"Tall": 5800, "Grande": 6300, "Venti": 6800}},
+      {"id": "sb6", "name": "자몽 허니 블랙 티", "prices": {"Tall": 5700, "Grande": 6200, "Venti": 6700}},
+      {"id": "sb7", "name": "쿨 라임 피지오", "prices": {"Tall": 5900, "Grande": 6400, "Venti": 6900}}
+    ]
+  },
+  "aunty": {
+    "label": "아운티제니",
+    "sizes": ["Regular", "Large"],
+    "items": [
+      {"id": "aj1", "name": "아메리카노", "prices": {"Regular": 3000, "Large": 3500}},
+      {"id": "aj2", "name": "카페라떼", "prices": {"Regular": 3800, "Large": 4300}},
+      {"id": "aj3", "name": "바닐라라떼", "prices": {"Regular": 4300, "Large": 4800}},
+      {"id": "aj4", "name": "딸기 스무디", "prices": {"Regular": 4800, "Large": 5300}},
+      {"id": "aj5", "name": "자몽에이드", "prices": {"Regular": 4500, "Large": 5000}},
+      {"id": "aj6", "name": "아이스티", "prices": {"Regular": 3500, "Large": 4000}}
+    ]
+  }
+}
